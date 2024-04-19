@@ -1,5 +1,9 @@
+import { ObjectId } from "mongodb";
+import { db } from "../data/mongodb";
+import { Response } from "express";
+
 export interface user{
-    id:string,
+    _id:string,
     nome:string,
     email:string,
 }
@@ -9,9 +13,24 @@ export class User{
     
     get info():user{
         return{
-            id:this._id,
+            _id:this._id,
             nome:this._nome,
             email:this._email
+        }
+    }
+
+    async register(response:Response):Promise<void>{
+        try{
+            const newObjId = new ObjectId(this._id.replace(/-/g, '').substring(0, 24));
+            await db.collection('users').insertOne({
+                _id:newObjId,
+                name:this._nome,
+                email:this._email,
+                password:this._pass
+            })
+            response.send(`Usuário registrado ${newObjId}`);
+        }catch(err){
+            response.send(err);
         }
     }
 }
