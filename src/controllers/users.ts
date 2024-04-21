@@ -38,7 +38,7 @@ export async function addUser(req:Request, res:Response){
     try{
         let id = new ObjectId(uuidv4().replace(/-/g, '').substring(0, 24));
         let hash = bcrypt.hashSync(req.body.pass);
-        let user = new User(id, req.body.name as string, req.body.email as string, hash);
+        let user = new User(id, req.body.name as string, req.body.email as string, hash, []);
         await user.register(res);
     }catch(err){
         res.send(err);
@@ -49,7 +49,7 @@ export async function putEmail(req:Request, res:Response){
     try{
         let id = new ObjectId(req.params.id);
         let data = await db.collection<user>('clients').findOne({_id:id});
-        let user = new User(id, data?.name as string, data?.email as string, data?.hash as string);
+        let user = new User(id, data?.name as string, data?.email as string, data?.hash as string, []);
         await user.alterarEmail(req.body.email, req.body.pass, res);
     }catch(err){
         res.send(err);
@@ -65,3 +65,13 @@ export async function delUser(req:Request, res:Response){
         res.send(err);
     }
 }
+
+// export async function reserveBook(req:Request, res:Response){
+//     try{
+//         let id = new ObjectId(req.params.id);
+//         let data = await db.collection<user>('clients').findOne({_id:id});
+//         let user = new User(id, data?.name as string, data?.email as string, data?.hash as string, []);
+//     }catch(err){
+//         res.send(err);
+//     }
+// }

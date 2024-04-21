@@ -2,24 +2,33 @@ import bcrypt from 'bcryptjs';
 import { ObjectId } from "mongodb";
 import { db } from "../data/mongodb";
 import { Response } from "express";
+import { format } from 'date-fns';
+import { book } from './book';
 
 export interface user{
     _id:ObjectId,
     name:string,
     email:string,
     hash:string,
+    books:book[],
 }
 
 export class User{
-    constructor(private _id:ObjectId, private _name:string, private _email:string, private _hash:string){}
+    constructor(private _id:ObjectId, private _name:string, private _email:string, private _hash:string, private _books:book[]){}
     
     get info():{_id:ObjectId, name:string, email:string}{
         return{
             _id:this._id,
             name:this._name,
-            email:this._email
+            email:this._email,
         }
     }
+
+    // reserveBook(res:Response):void{
+    //     let date = format(new Date(), 'dd/MM/yyyy - H:mm:ss');
+    //     console.log(typeof date);
+    //     res.send(date);
+    // }
 
     async register(response:Response):Promise<void>{
         try{
@@ -28,7 +37,8 @@ export class User{
                 _id:this._id,
                 name:this._name,
                 email:this._email,
-                hash:this._hash
+                hash:this._hash,
+                books:this._books,
             })
             response.send(`Usuário registrado ${this._id}`);
         }catch(err){
