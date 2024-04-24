@@ -1,10 +1,14 @@
 import express from 'express';
 import multer from 'multer';
-import { getAllUsers, getUser, addUser, putEmail, delUser } from '../controllers/users';
+import { getAllUsers, getUser, addUser, putEmail, delUser, login } from '../controllers/users';
 
 const upload = multer();
 
 export const routerUsers = express.Router();
+
+routerUsers.route('/login').get([upload.none(), login])
+
+routerUsers.route('/add-user').post([upload.none(), addUser])
 
 routerUsers.route('/users').get(getAllUsers);
 
@@ -14,9 +18,4 @@ routerUsers.route('/user/:id')
 
 routerUsers.route('/user/update-email/:id').put([express.json(), putEmail])
 
-routerUsers.route('/add-user').post(upload.none()) // Multipart Form parse
-routerUsers.route('/add-user').post(addUser)
-
-routerUsers.use((req, res)=>{
-    res.send(`/collection-user -> ${req.url} - rota não encontrada! `)
-})
+routerUsers.use((req, res)=>{res.send(`/collection-user -> ${req.url} - rota não encontrada! `)})

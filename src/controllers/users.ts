@@ -5,7 +5,21 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcryptjs';
 import { user, User } from "../models/user";
 
+//let date = format(new Date(), 'dd/MM/yyyy - H:mm:ss');
 //ACTIONS
+
+export async function login(req:Request, res:Response){
+    try{
+        let data = await db.collection<user>('clients').findOne({email:req.body.email});
+        if(!data?._id) throw new Error('Email não encontrado!');
+
+        let user = new User(data._id as ObjectId, data.name as string, data.email as string, data.hash as string, data.books)
+        await user.login(req.body.pass, res);
+    }catch(err){
+        let message = (err as Error).message;
+        res.status(401).send(message)
+    }
+}
 
 export async function getAllUsers(req:Request, res:Response){
     try{

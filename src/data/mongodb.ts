@@ -5,4 +5,4 @@ dotenv.config();
 
 const client = new MongoClient(process.env.DB_URI as string);
 
-export const db = client.db('sample_mflix');
+export const db = client.db('Bookstore');
