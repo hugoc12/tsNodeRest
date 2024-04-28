@@ -5,6 +5,10 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcryptjs';
 import { user, User } from "../models/user";
 
+export interface MyRequest extends Request{
+    user:string
+}
+
 //let date = format(new Date(), 'dd/MM/yyyy - H:mm:ss');
 //ACTIONS
 
@@ -12,7 +16,6 @@ export async function login(req:Request, res:Response){
     try{
         let data = await db.collection<user>('clients').findOne({email:req.body.email});
         if(!data?._id) throw new Error('Email não encontrado!');
-
         let user = new User(data._id as ObjectId, data.name as string, data.email as string, data.hash as string, data.books)
         await user.login(req.body.pass, res);
     }catch(err){
@@ -21,7 +24,18 @@ export async function login(req:Request, res:Response){
     }
 }
 
-export async function getAllUsers(req:Request, res:Response){
+export async function logout(req:Request, res:Response){
+    try{
+        let id = new ObjectId(req.params.id);
+        let data = await db.collection<user>('clients').findOne({_id:id}) as user;
+        let user = new User(id, data?.name, data?.email, data?.hash, data?.books);
+        user.logout(req, res);
+    }catch(err){
+        res.status(400).send(err);
+    }
+}
+
+export async function getAllUsers(req:MyRequest, res:Response){
     try{
         let data = await db.collection('clients').find({}).project({
             _id:1,

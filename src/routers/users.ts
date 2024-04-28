@@ -1,16 +1,25 @@
-import express from 'express';
+import express, {Request, Response} from 'express';
 import multer from 'multer';
-import { getAllUsers, getUser, addUser, putEmail, delUser, login } from '../controllers/users';
+import { getAllUsers, getUser, addUser, putEmail, delUser, login, logout } from '../controllers/users';
+import verifyJWT from '../middlewares/verifyJWT';
+import { refreshToken } from '../middlewares/refreshToken';
+import cookie from 'cookie-parser';
 
 const upload = multer();
 
 export const routerUsers = express.Router();
 
+routerUsers.use(cookie())
+
 routerUsers.route('/login').get([upload.none(), login])
+
+routerUsers.route('/logout/:id').get(logout)
+
+routerUsers.route('/update-token').get(refreshToken);
 
 routerUsers.route('/add-user').post([upload.none(), addUser])
 
-routerUsers.route('/users').get(getAllUsers);
+routerUsers.route('/users').get([verifyJWT, getAllUsers]);
 
 routerUsers.route('/user/:id')
     .get(getUser)

@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { ObjectId } from "mongodb";
 import { db } from "../data/mongodb";
-import { Response } from "express";
+import { Request ,Response } from "express";
 //import { format } from 'date-fns';
 import { book } from './book';
 import jwt from 'jsonwebtoken';
@@ -37,12 +37,12 @@ export class User {
             //     "message":"Login feito com sucesso!"
             // })
             let accessToken = jwt.sign(
-                { "userauth": this._name },
+                { "username": this._name },
                 process.env.ACCESS_TOKEN_SECRET as string,
-                { expiresIn: '30s' }
+                { expiresIn: '50s' }
             )
             let refreshToken = jwt.sign(
-                { "userauth": this._name },
+                { "username": this._name },
                 process.env.REFRESH_TOKEN_SECRET as string,
                 { expiresIn: '1d' }
             )
@@ -55,15 +55,31 @@ export class User {
             })
             res.cookie('jwt', refreshToken, {
                 httpOnly: true,
-                maxAge: 24 * 60 * 60 * 1000
+                maxAge: 24 * 60 * 60 * 1000,
+                sameSite:'none',
+                secure:true,
             })
             res.json({ accessToken })
         };
     }
-
+    async logout(req:Request, res: Response){
+        let cookies = req.cookies;
+        if(!cookies?.jwt) return res.status(403) //Forbidden
+        res.clearCookie('jwt', {httpOnly:true, sameSite:'none', secure:true});
+        try{
+            await db.collection('clients').updateOne({_id:this._id}, {
+                $set:{
+                    refreshToken:''
+                }
+            })
+            this._refreshToken = '';
+            res.send('LOGOUT REALIZADO!')
+        }catch(err){
+            res.sendStatus(400);
+        }
+    }
     async register(response: Response): Promise<void> {
         try {
-            //const newObjId = new ObjectId(this._id.replace(/-/g, '').substring(0, 24));
             await db.collection<user>('clients').insertOne({
                 _id: this._id,
                 name: this._name,
@@ -77,7 +93,6 @@ export class User {
             response.send(err);
         }
     }
-
     async alterarEmail(email: string, pass: string, res: Response) {
         let id = new ObjectId(this._id);
         try {
