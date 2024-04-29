@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import {Request, Response, NextFunction} from 'express';
+import { User, user } from '../models/user';
+import { db } from '../data/mongodb';
 
 dotenv.config();
 
@@ -13,8 +15,13 @@ export default async function verifyJWT(req:MyRequest, res:Response, next:NextFu
         const authHeader = req.headers['authorization']; //Bearer Token
         if(!authHeader) return res.status(401).send('Header not bearer authorization');
         const token = authHeader.split(' ')[1]; //ACCESS TOKEN
+        let cookies = req.cookies;
+        const data = await db.collection('clients').findOne({refreshToken:cookies.jwt}) as user;
+        if(!data) return res.status(400).send('Usuário não encontrado!');
+        
+        let user = new User(data._id, data.name, data.email, data.hash, data.books, data.refreshToken);
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded:any)=>{
-            if(err) throw new Error('Token de acesso inválido')
+            if(err || decoded.username != user.info.name) throw new Error('Token de acesso inválido')
             req.user = decoded.username;
             next();
         });
