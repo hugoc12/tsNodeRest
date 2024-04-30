@@ -5,6 +5,7 @@ import { Request ,Response } from "express";
 //import { format } from 'date-fns';
 import { book } from './book';
 import jwt from 'jsonwebtoken';
+import PERMISSIONS_LIST from '../config/permissions';
 
 export interface user {
     _id: ObjectId,
@@ -12,17 +13,31 @@ export interface user {
     email: string,
     hash: string,
     books: book[],
-    refreshToken: string
+    refreshToken: string,
+    roles:{
+        user?:number,
+        editor?:number,
+        admin?:number,
+    }
 }
 
 export class User {
-    constructor(private _id: ObjectId, private _name: string, private _email: string, private _hash: string, private _books: book[], private _refreshToken: string = '') { }
+    constructor(
+        private _id: ObjectId, 
+        private _name: string, 
+        private _email: string, 
+        private _hash: string, 
+        private _books: book[], 
+        private _refreshToken: string = '',
+        private _roles: {user?:number, editor?:number, admin?:number} = {user:PERMISSIONS_LIST.User}, //DEFAULT
+    ) { }
 
-    get info(): { _id: ObjectId, name: string, email: string } {
+    get info(): { _id: ObjectId, name: string, email: string, roles:{user?:number, editor?:number, admin?:number} } {
         return {
             _id: this._id,
             name: this._name,
             email: this._email,
+            roles:this._roles,
         }
     }
 
@@ -37,12 +52,12 @@ export class User {
             //     "message":"Login feito com sucesso!"
             // })
             let accessToken = jwt.sign(
-                { "username": this._name },
+                { "username": this._name, "roles":this._roles },
                 process.env.ACCESS_TOKEN_SECRET as string,
                 { expiresIn: '50s' }
             )
             let refreshToken = jwt.sign(
-                { "username": this._name },
+                { "username": this._name, "roles":this._roles },
                 process.env.REFRESH_TOKEN_SECRET as string,
                 { expiresIn: '1d' }
             )
@@ -87,6 +102,7 @@ export class User {
                 hash: this._hash,
                 books: this._books,
                 refreshToken: this._refreshToken,
+                roles:this._roles,
             })
             response.send(`Usuário registrado ${this._id}`);
         } catch (err) {

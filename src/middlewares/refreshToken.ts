@@ -15,12 +15,12 @@ export async function refreshToken(req:Request, res:Response){
         const refreshToken = cookie.jwt;
 
         let data = await db.collection<user>('clients').findOne({refreshToken:refreshToken});
-        let user = new User(data?._id as ObjectId, data?.name as string, data?.email as string, data?.hash as string, data?.books as book[], data?.refreshToken);
+        let user = new User(data?._id as ObjectId, data?.name as string, data?.email as string, data?.hash as string, data?.books as book[], data?.refreshToken, data?.roles);
         
         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET as string, (err:jwt.VerifyErrors | null, decoded:any)=>{
             if(err||decoded.username != user.info.name) throw new Error('Usuário precisa fazer login novamente - TOKEN REFRESH INVÁLIDO!/name inválido');
             let accessToken = jwt.sign(
-                { "username": user.info.name },
+                { "username": user.info.name, "roles":user.info.roles},
                 process.env.ACCESS_TOKEN_SECRET as string,
                 { expiresIn: '50s' }
             )

@@ -3,6 +3,7 @@ import multer from 'multer';
 import { getAllUsers, getUser, addUser, putEmail, delUser, login, logout } from '../controllers/users';
 import verifyJWT from '../middlewares/verifyJWT';
 import { refreshToken } from '../middlewares/refreshToken';
+import verifyPermissions from '../middlewares/verifyPermissions';
 import cookie from 'cookie-parser';
 
 const upload = multer();
@@ -23,7 +24,7 @@ routerUsers.route('/users').get([verifyJWT, getAllUsers]);
 
 routerUsers.route('/user/:id')
     .get(getUser)
-    .delete(delUser)
+    .delete([verifyJWT, verifyPermissions, delUser])
 
 routerUsers.route('/user/update-email/:id').put([express.json(), putEmail])
 

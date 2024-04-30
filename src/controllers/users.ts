@@ -14,9 +14,9 @@ export interface MyRequest extends Request{
 
 export async function login(req:Request, res:Response){
     try{
-        let data = await db.collection<user>('clients').findOne({email:req.body.email});
+        let data = await db.collection<user>('clients').findOne({email:req.body.email}) as user;
         if(!data?._id) throw new Error('Email não encontrado!');
-        let user = new User(data._id as ObjectId, data.name as string, data.email as string, data.hash as string, data.books)
+        let user = new User(data._id, data.name, data.email, data.hash, data.books, data.refreshToken, data.roles);
         await user.login(req.body.pass, res);
     }catch(err){
         let message = (err as Error).message;

@@ -7,7 +7,8 @@ import { db } from '../data/mongodb';
 dotenv.config();
 
 export interface MyRequest extends Request{
-    user:string
+    username:string,
+    roles:number[],
 }
 
 export default async function verifyJWT(req:MyRequest, res:Response, next:NextFunction){
@@ -22,7 +23,8 @@ export default async function verifyJWT(req:MyRequest, res:Response, next:NextFu
         let user = new User(data._id, data.name, data.email, data.hash, data.books, data.refreshToken);
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded:any)=>{
             if(err || decoded.username != user.info.name) throw new Error('Token de acesso inválido')
-            req.user = decoded.username;
+            req.username = decoded.username;
+            req.roles = Object.values(decoded.roles);
             next();
         });
     }catch(err){
